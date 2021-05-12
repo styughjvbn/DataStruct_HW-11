@@ -1,27 +1,31 @@
 #include <stdio.h>
+#include <stdlib.h>
 #define MAX_VERTEX_NUM 10
 
-typedef struct{
-	int edge;
+typedef struct {
+	int key;
 	struct Node* link;
 }Node;
 
-typedef struct{
-	int vertex;
-	struct Node* link;
-}Head;
+void Initialize();
+int Insert_Vertex(int vertex_num);
+int Insert_Edge(int from, int to);
+void DFS(int v);
+void Print_Graph();
 
-Node* Initialize();
+Node* head = NULL;
+short int visit[MAX_VERTEX_NUM] = { 0 };
 
 int main()
 {
 	char command;
-	int vertx_num=0;
+	int vertex_num = 0;
+	int from, to, v;
 	int initial = 0;//초기화가 진행됐는지 확인한다.
-	Head* head=NULL;
-	printf("[----------------------- [서종원] [2018038031] -----]\n");
 
-	do{
+	printf("[------------------ [서종원] [2018038031] -------------------]\n");
+
+	do {
 		printf("\n\n");
 		printf("----------------------------------------------------------------\n");
 		printf("                         Graph Searches                         \n");
@@ -36,46 +40,57 @@ int main()
 		fflush(stdout);
 		scanf(" %c", &command);
 
-		switch(command) {
+		switch (command) {
 		case 'z': case 'Z':
-			head=Initialize();
+			Initialize();
 			initial++;
 			break;
 		case 'q': case 'Q':
-			if(initial){
+			if (initial) {
 
 			}
 			break;
 		case 'v': case 'V':
-			if(initial){
+			if (initial) {
+				if (Insert_Vertex(vertex_num)==0)
+					vertex_num++;
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
 		case 'e': case 'E':
-			if(initial){
-
+			if (initial) {
+				printf("간선을 이을 두 정점을 입력하세요\n");
+				fflush(stdout);
+				scanf("%d %d", &from, &to);
+				Insert_Edge(from, to);
+				Insert_Edge(to, from);
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
 		case 'd': case 'D':
-			if(initial){
-
+			if (initial) {
+				printf("깊이우선탐색을 시작할 정점을 선택하세요\n");
+				fflush(stdout);
+				scanf("%d", &v);
+				for (int i = 0; i < MAX_VERTEX_NUM; i++)
+					visit[i] = 0;
+				DFS(v);
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
 		case 'b': case 'B':
-			if(initial){
+			if (initial) {
 
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
 		case 'p': case 'P':
-			if(initial){
-
+			if (initial) {
+				Print_Graph();
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
@@ -84,42 +99,74 @@ int main()
 			printf("\n       >>>>>   Concentration!!   <<<<<     \n");
 			break;
 		}
-	}while(command != 'q' && command != 'Q');
+	} while (command != 'q' && command != 'Q');
 	return 1;
 }
-
-void Initialize(Head** head){
-	head*=(Head*)malloc(sizeof(Head)*MAX_VERTEX_NUM);
-	for(int i=0;i<MAX_VERTEX_NUM;i++){
-		head[i]->vertex=0;
-		head[i]->link=NULL;
+void Print_Graph() {
+	Node* tmp = NULL;
+	for (int i = 0; head[i].key != -1;i++) {
+		printf("[%d] : ", head[i].key);
+		tmp = head[i].link;
+		for (; tmp; tmp = tmp->link)
+			printf("   [%d]", tmp->key);
+		printf("\n");
 	}
 }
+void Initialize() {
+	if (head) {//인접리스트 배열이 비어있지않다면 해제
+		//해제
+	}
 
-int Insert_Vertex(Head* head,int vertex_num){
+	head = (Node*)malloc(sizeof(Node) * MAX_VERTEX_NUM);//head에 인접리스트 배열공간 할당
+	for (int i = 0; i < MAX_VERTEX_NUM; i++) {//초기화
+		head[i].key = -1;
+		head[i].link = NULL;
+	}
 
-	if(vertex_num>=MAX_VERTEX_NUM)
+}
+
+int Insert_Vertex(int vertex_num) {
+
+	if (vertex_num >= MAX_VERTEX_NUM)
 		return -1;
 
-	head[vertex_num].vertex=vertex_num;
+	head[vertex_num].key = vertex_num;
 	return 0;
 }
-int Insert_Edge(Head* head,int from,int to){
-	Node* new=(Node*)malloc(sizeof(Node));
-	Node* tmp=NULL;
-	if(head[from]==from&&head[to]==to){
-		new->edge=to;
-		new->link=NULL;
-		if(!head[from].link)
-			head[from].link=new;
-		else
-		tmp=head[from].link;
-		while(tmp->link)
-			tmp=tmp->link;
-		tmp->link=new;
-		return 0;
-	}
-	else
-		return -1;
 
+int Insert_Edge(int from, int to) {
+	Node* new = (Node*)malloc(sizeof(Node));
+	Node* tmp = NULL;
+	Node* tmp_ = head;
+	if (head[from].key == from && head[to].key == to) {
+		new->key = to;
+		new->link = NULL;
+		if (head[from].link == NULL)
+			head[from].link = new;
+		else {
+			tmp = head[from].link;
+			while (tmp) {
+				if (to < tmp->key) {
+					new->link = tmp;
+					tmp_->link = new;
+					return 0;
+				}
+				tmp_ = tmp;
+				tmp = tmp->link;
+			}
+			tmp_->link = new;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+void DFS(int v) {
+
+	Node* tmp;
+	visit[v] = 1;
+	printf("%5d", head[v].key);
+	for (tmp = head[v].link; tmp; tmp = tmp->link)
+		if (!visit[tmp->key])
+			DFS(tmp->key);
 }
