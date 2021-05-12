@@ -11,7 +11,15 @@ void Initialize();
 int Insert_Vertex(int vertex_num);
 int Insert_Edge(int from, int to);
 void DFS(int v);
+void BFS(int v);
 void Print_Graph();
+
+/* for queue */
+Node* queue[MAX_VERTEX_NUM];
+int front = -1;
+int rear = -1;
+Node* deQueue();
+void enQueue(Node* aNode);
 
 Node* head = NULL;
 short int visit[MAX_VERTEX_NUM] = { 0 };
@@ -61,7 +69,6 @@ int main()
 		case 'e': case 'E':
 			if (initial) {
 				printf("간선을 이을 두 정점을 입력하세요\n");
-				fflush(stdout);
 				scanf("%d %d", &from, &to);
 				Insert_Edge(from, to);
 				Insert_Edge(to, from);
@@ -72,7 +79,6 @@ int main()
 		case 'd': case 'D':
 			if (initial) {
 				printf("깊이우선탐색을 시작할 정점을 선택하세요\n");
-				fflush(stdout);
 				scanf("%d", &v);
 				for (int i = 0; i < MAX_VERTEX_NUM; i++)
 					visit[i] = 0;
@@ -83,7 +89,11 @@ int main()
 			break;
 		case 'b': case 'B':
 			if (initial) {
-
+				printf("넓이우선탐색을 시작할 정점을 선택하세요\n");
+				scanf("%d", &v);
+				for (int i = 0; i < MAX_VERTEX_NUM; i++)
+					visit[i] = 0;
+				BFS(v);
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
@@ -135,22 +145,25 @@ int Insert_Vertex(int vertex_num) {
 }
 
 int Insert_Edge(int from, int to) {
-	Node* new = (Node*)malloc(sizeof(Node));
+	Node* new = NULL;
 	Node* tmp = NULL;
-	Node* tmp_ = head;
+	Node* tmp_ = &head[from];
 	if (head[from].key == from && head[to].key == to) {
+		new = (Node*)malloc(sizeof(Node));
 		new->key = to;
 		new->link = NULL;
 		if (head[from].link == NULL)
 			head[from].link = new;
 		else {
 			tmp = head[from].link;
-			while (tmp) {
+			while (tmp!=NULL) {
 				if (to < tmp->key) {
 					new->link = tmp;
 					tmp_->link = new;
 					return 0;
 				}
+				else if (to == tmp->key)
+					return 0;
 				tmp_ = tmp;
 				tmp = tmp->link;
 			}
@@ -162,11 +175,47 @@ int Insert_Edge(int from, int to) {
 }
 
 void DFS(int v) {
-
 	Node* tmp;
 	visit[v] = 1;
 	printf("%5d", head[v].key);
 	for (tmp = head[v].link; tmp; tmp = tmp->link)
 		if (!visit[tmp->key])
 			DFS(tmp->key);
+}
+
+void BFS(int v) {
+	Node* tmp;
+	Node* temp;
+	rear = front = -1;
+
+	enQueue(&head[v]);
+	visit[v] = 1;
+	while (1) {
+		temp = deQueue();
+		if (!temp)
+			break;
+
+		printf("%5d", temp->key);
+		for (tmp = temp->link; tmp; tmp = tmp->link) {
+			if (!visit[tmp->key]) {
+				enQueue(&head[tmp->key]);
+				visit[tmp->key] = 1;
+			}
+		}
+	}
+}
+Node* deQueue()
+{
+	if (front == rear)//큐가 비었다면
+		return NULL;//NULL 리턴
+	else//아니라면 front 리턴
+		return queue[++front];
+}
+
+void enQueue(Node* aNode)
+{
+	if (rear + 1 >= MAX_VERTEX_NUM)//큐가 꽉찼다면
+		printf("큐가 꽉찼습니다\n");//안내메시지출력
+	else//아니라면 rear에 저장
+		queue[++rear] = aNode;
 }
