@@ -2,36 +2,37 @@
 #include <stdlib.h>
 #define MAX_VERTEX_NUM 10
 
-typedef struct {
+typedef struct {//인접리스트의 리스트 노드와 해드노드를 구현
 	int key;
 	struct Node* link;
 }Node;
 
-void Initialize();
-int Insert_Vertex(int vertex_num);
-int Insert_Edge(int from, int to);
-void DFS(int v);
-void BFS(int v);
-void Print_Graph();
+void Initialize();//초기화
+int Insert_Vertex();//정점 추가
+int Insert_Edge(int, int);//간선 추가
+void DFS(int);//깊이우선탐색
+void BFS(int);//넓이우선탐색
+void Print_Graph();//그래프 출력
+void Quit();//해제 및 종료
 
-/* for queue */
+/*넓이우선탐색을 위한 큐*/
 Node* queue[MAX_VERTEX_NUM];
 int front = -1;
 int rear = -1;
 Node* deQueue();
 void enQueue(Node* aNode);
 
-Node* head = NULL;
-short int visit[MAX_VERTEX_NUM] = { 0 };
+int vertex_num = 0;//정점의 개수
+Node* head = NULL;//그래프 전체의 해드
+short int visit[MAX_VERTEX_NUM] = { 0 };//방문 플래그
 
 int main()
 {
 	char command;
-	int vertex_num = 0;
 	int from, to, v;
 	int initial = 0;//초기화가 진행됐는지 확인한다.
 
-	printf("[------------------ [서종원] [2018038031] -------------------]\n");
+	printf("[------------------- [서종원] [2018038031] --------------------]\n");
 
 	do {
 		printf("\n\n");
@@ -52,16 +53,18 @@ int main()
 		case 'z': case 'Z':
 			Initialize();
 			initial++;
+			vertex_num = 0;//초기화가 진행된다면 정점의 수를 0으로 만든다.
 			break;
 		case 'q': case 'Q':
-			if (initial) {
-
-			}
+			if (initial)
+				Quit();
 			break;
 		case 'v': case 'V':
 			if (initial) {
-				if (Insert_Vertex(vertex_num)==0)
+				if (Insert_Vertex() == 0)//정점 추가가 성공한다면 정점의 수를 +1한다.
 					vertex_num++;
+				else
+					printf("최대 정점의 개수를 넘었습니다.\n");
 			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
@@ -69,8 +72,8 @@ int main()
 		case 'e': case 'E':
 			if (initial) {
 				printf("간선을 이을 두 정점을 입력하세요\n");
-				scanf("%d %d", &from, &to);
-				Insert_Edge(from, to);
+				scanf("%d %d", &from, &to);//간선을 이을 두 정점을 입력받은후에
+				Insert_Edge(from, to);//양쪽정점에 링크를 연결한다.
 				Insert_Edge(to, from);
 			}
 			else
@@ -79,8 +82,8 @@ int main()
 		case 'd': case 'D':
 			if (initial) {
 				printf("깊이우선탐색을 시작할 정점을 선택하세요\n");
-				scanf("%d", &v);
-				for (int i = 0; i < MAX_VERTEX_NUM; i++)
+				scanf("%d", &v);//깊이우선탐색을 시작할 정점을 입력받는다.
+				for (int i = 0; i < MAX_VERTEX_NUM; i++)//탐색을 시작하기 전에 방문플래그배열을 초기화한다.
 					visit[i] = 0;
 				DFS(v);
 			}
@@ -90,8 +93,8 @@ int main()
 		case 'b': case 'B':
 			if (initial) {
 				printf("넓이우선탐색을 시작할 정점을 선택하세요\n");
-				scanf("%d", &v);
-				for (int i = 0; i < MAX_VERTEX_NUM; i++)
+				scanf("%d", &v);//넓이우선탐색을 시작할 정점을 입력받는다.
+				for (int i = 0; i < MAX_VERTEX_NUM; i++)//탐색을 시작하기 전에 방문플래그배열을 초기화한다.
 					visit[i] = 0;
 				BFS(v);
 			}
@@ -112,99 +115,98 @@ int main()
 	} while (command != 'q' && command != 'Q');
 	return 1;
 }
-void Print_Graph() {
+void Print_Graph() {//그래프를 출력한다.
 	Node* tmp = NULL;
-	for (int i = 0; head[i].key != -1;i++) {
-		printf("[%d] : ", head[i].key);
-		tmp = head[i].link;
-		for (; tmp; tmp = tmp->link)
+	printf("정점의 개수 : %d\n", vertex_num);//정점의 개수를 출력한다.
+	for (int i = 0; i<vertex_num; i++) {//정점의 개수만큼 출력한다.
+		printf("[%d] : ", head[i].key);//정점의 번호를 출력한다.
+		tmp = head[i].link;//i번호를 가진 정점에 인접하는 정점들을 출력하기위해 링크를 임시로 저장받는다.
+		for (; tmp; tmp = tmp->link)//인접하는 정점들을 모두 출력한다.
 			printf("   [%d]", tmp->key);
 		printf("\n");
 	}
 }
-void Initialize() {
+void Initialize() {//초기화
 	if (head) {//인접리스트 배열이 비어있지않다면 해제
-		//해제
+		Quit();
 	}
 
 	head = (Node*)malloc(sizeof(Node) * MAX_VERTEX_NUM);//head에 인접리스트 배열공간 할당
-	for (int i = 0; i < MAX_VERTEX_NUM; i++) {//초기화
+	for (int i = 0; i < MAX_VERTEX_NUM; i++) {//정점이 추가되었는지 판단하기 위한 초기화
 		head[i].key = -1;
 		head[i].link = NULL;
 	}
 
 }
 
-int Insert_Vertex(int vertex_num) {
-
-	if (vertex_num >= MAX_VERTEX_NUM)
+int Insert_Vertex() {//정점 추가
+	if (vertex_num >= MAX_VERTEX_NUM)//최대 정점의 수를 넘겼다면 실패(-1)을 리턴한다.
 		return -1;
 
-	head[vertex_num].key = vertex_num;
-	return 0;
+	head[vertex_num].key = vertex_num;//최대 정점의 수를 넘기지않았다면 추가된 순서대로 정점의 번호를 부여한다.
+	return 0;//성공(0)을 리턴한다.
 }
 
-int Insert_Edge(int from, int to) {
-	Node* new = NULL;
-	Node* tmp = NULL;
-	Node* tmp_ = &head[from];
-	if (head[from].key == from && head[to].key == to) {
-		new = (Node*)malloc(sizeof(Node));
+int Insert_Edge(int from, int to) {//간선 추가 - 탐색을 실시할때 번호가 작은 정점부터 탐색을 하기 위해 정점의 인접정점들을 오름차순으로 추가한다.
+	Node* new = NULL;//새로 추가될 간선이다.
+	Node* tmp = NULL;//
+	Node* tmp_ = &head[from];//
+	if (head[from].key == from && head[to].key == to) {//출발지와 목적지의 정점이 존재한다면 간선을 추가한다.
+		new = (Node*)malloc(sizeof(Node));//새로 추가될 간선의 공간을 할당받는다.
 		new->key = to;
 		new->link = NULL;
-		if (head[from].link == NULL)
+		if (head[from].link == NULL)//출발지의 정점의 인접정점이 1개도 없다면 바로 뒤에 연결한다.
 			head[from].link = new;
-		else {
+		else {//1개이상 존재한다면 오름차순으로 추가한다.
 			tmp = head[from].link;
-			while (tmp!=NULL) {
+			while (tmp != NULL) {//마지막까지 검사한다.
 				if (to < tmp->key) {
 					new->link = tmp;
 					tmp_->link = new;
 					return 0;
 				}
-				else if (to == tmp->key)
+				else if (to == tmp->key)//이미 목적지와의 간선이 존재한다면 함수를 종료한다.
 					return 0;
-				tmp_ = tmp;
+				tmp_ = tmp;//다음으로 이동한다.
 				tmp = tmp->link;
 			}
-			tmp_->link = new;
+			tmp_->link = new;//목적지의 정점의 번호가 제일 크다면 마지막에 추가한다.
 			return 0;
 		}
 	}
 	return -1;
 }
 
-void DFS(int v) {
+void DFS(int v) {//깊이 우선탐색
 	Node* tmp;
-	visit[v] = 1;
-	printf("%5d", head[v].key);
-	for (tmp = head[v].link; tmp; tmp = tmp->link)
-		if (!visit[tmp->key])
-			DFS(tmp->key);
+	visit[v] = 1;//처음으로 받은 정점의 방문플래그를 set한다.
+	printf("%5d", head[v].key);//정점의 번호를 출력한다.
+	for (tmp = head[v].link; tmp; tmp = tmp->link)//정점의 모든 인접정점을 방문한다.
+		if (!visit[tmp->key])//인접정점이 방문되지 않은 정점이라면
+			DFS(tmp->key);//방문한다.
 }
 
-void BFS(int v) {
+void BFS(int v) {//넓이 우선탐색
 	Node* tmp;
 	Node* temp;
-	rear = front = -1;
+	rear = front = -1;//큐를 초기화한다.
 
-	enQueue(&head[v]);
-	visit[v] = 1;
+	enQueue(&head[v]);//시작정점을 인큐한다.
+	visit[v] = 1;//시작정점의 방문플래그를 set한다.
 	while (1) {
-		temp = deQueue();
-		if (!temp)
+		temp = deQueue();//디큐한다.
+		if (!temp)//큐가 비었다면 종료한다.
 			break;
-
-		printf("%5d", temp->key);
-		for (tmp = temp->link; tmp; tmp = tmp->link) {
-			if (!visit[tmp->key]) {
-				enQueue(&head[tmp->key]);
-				visit[tmp->key] = 1;
+		printf("%5d", temp->key);//디큐한 정점의 번호를 출력한다.
+		for (tmp = temp->link; tmp; tmp = tmp->link) {//디큐한 정점의 인접정점을 모두 검사한다.
+			if (!visit[tmp->key]) {//인접정점이 방문되지 않은 정점이라면
+				enQueue(&head[tmp->key]);//인큐하고
+				visit[tmp->key] = 1;//방문플래그를 set한다.
 			}
 		}
 	}
 }
-Node* deQueue()
+Node* deQueue()//디큐
 {
 	if (front == rear)//큐가 비었다면
 		return NULL;//NULL 리턴
@@ -212,10 +214,25 @@ Node* deQueue()
 		return queue[++front];
 }
 
-void enQueue(Node* aNode)
+void enQueue(Node* aNode)//인큐
 {
 	if (rear + 1 >= MAX_VERTEX_NUM)//큐가 꽉찼다면
 		printf("큐가 꽉찼습니다\n");//안내메시지출력
 	else//아니라면 rear에 저장
 		queue[++rear] = aNode;
+}
+
+void Quit() {//초기화 및 해제
+	Node* tmp = NULL;
+	Node* temp = NULL;
+	for (int i = 0; i < vertex_num; i++) {//추가된 모든 정점의 인접리스트를 해제한다.
+		tmp = head[i].link;
+		while (tmp) {
+			temp = tmp;
+			tmp = tmp->link;
+			free(temp);
+		}
+	}
+	free(head);//그래프의 해드를 초기화한다.
+	head = NULL;
 }
