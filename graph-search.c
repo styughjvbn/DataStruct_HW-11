@@ -78,7 +78,7 @@ int main()
 			break;
 		case 'e': case 'E':
 			if (initial) {
-				printf("간선을 이을 두 정점을 입력하세요\n");
+				printf("간선을 이을 두 정점을 입력하세요 : ");
 				fflush(stdout);
 				scanf("%d %d", &from, &to);//간선을 이을 두 정점을 입력받은후에
 				Insert_Edge(from, to);//양쪽정점에 링크를 연결한다.
@@ -89,10 +89,10 @@ int main()
 			break;
 		case 'd': case 'D':
 			if (initial) {
-				printf("깊이우선탐색을 시작할 정점을 선택하세요\n");
+				printf("깊이우선탐색을 시작할 정점을 선택하세요 : ");
 				fflush(stdout);
 				scanf("%d", &v);//깊이우선탐색을 시작할 정점을 입력받는다.
-				if(ready(v)==0)
+				if(ready(v)==0)//탐색을 위한 준비가 되지않았다면 종료한다.
 					DFS(v);
 			}
 			else
@@ -100,7 +100,7 @@ int main()
 			break;
 		case 'b': case 'B':
 			if (initial) {
-				printf("넓이우선탐색을 시작할 정점을 선택하세요\n");
+				printf("넓이우선탐색을 시작할 정점을 선택하세요 : ");
 				fflush(stdout);
 				scanf("%d", &v);//넓이우선탐색을 시작할 정점을 입력받는다.
 				BFS(v);
@@ -109,9 +109,8 @@ int main()
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
 		case 'p': case 'P':
-			if (initial) {
+			if (initial)
 				Print_Graph();
-			}
 			else
 				printf("초기화를 먼저 실행해주세요\n");
 			break;
@@ -133,7 +132,6 @@ void Print_Graph() {//그래프를 출력한다.
 				printf("   [%d]", tmp->key);
 			printf("\n");
 		}
-
 	}
 }
 void Initialize() {//초기화
@@ -147,12 +145,12 @@ void Initialize() {//초기화
 }
 
 int Insert_Vertex(int vertex) {//정점 추가
-	if (vertex >= MAX_VERTEX_NUM||vertex<0){//정점에 부여될 수 있는 번호에 포함되지 않는다면 -1을 리턴한다.
-		printf("정점에 부여될 수 있는 번호에 포함되지 않습니다.\n");
-		return -1;
-	}
 	if(head[vertex].key==vertex){//이미 추가된 정점이라면 안내메시지 출력후 종료한다.
 		printf("이미 존재하는 정점입니다.\n");
+		return -1;
+	}
+	if (vertex >= MAX_VERTEX_NUM||vertex<0){//정점에 부여될 수 있는 번호에 포함되지 않는다면 -1을 리턴한다.
+		printf("정점에 부여될 수 있는 번호에 포함되지 않습니다. 알맞은 범위는 [0] ~ [%d] 입니다.\n",MAX_VERTEX_NUM-1);
 		return -1;
 	}
 	head[vertex].key = vertex;//최대 정점의 수를 넘기지않았다면 입력받은 번호의 정점을 추가한다.
@@ -179,8 +177,10 @@ int Insert_Edge(int from, int to) {//간선 추가 - 탐색을 실시할때 번호가 작은 정�
 					tmp_->link = new;
 					return 0;
 				}
-				else if (to == tmp->key)//이미 목적지와의 간선이 존재한다면 함수를 종료한다.
+				else if (to == tmp->key){//이미 목적지와의 간선이 존재한다면 함수를 종료한다.
+					printf("이미 존재하는 간선입니다.\n");
 					return 0;
+				}
 				tmp_ = tmp;//다음으로 이동한다.
 				tmp = tmp->link;
 			}
@@ -204,22 +204,21 @@ void DFS(int v) {//깊이 우선탐색
 void BFS(int v) {//넓이 우선탐색
 	Node* temp;
 	rear = front = -1;//큐를 초기화한다.
-	if(ready(v)==-1)
-		return;
+	if(ready(v)==0){//탐색을 위한 준비가 되지 않았다면 종료한다.
+		enQueue(&head[v]);//시작정점을 인큐한다.
+		visit[v] = 1;//시작정점의 방문플래그를 set한다.
+		while (1) {
+			temp = deQueue();//디큐한다.
+			if (!temp)//큐가 비었다면 종료한다.
+				break;
+			printf("%5d", temp->key);//디큐한 정점의 번호를 출력한다.
+			for (temp = temp->link; temp; temp = temp->link) //디큐한 정점의 인접정점을 모두 검사한다.
+				if (!visit[temp->key]) {//인접정점이 방문되지 않은 정점이라면
+					enQueue(&head[temp->key]);//인큐하고
+					visit[temp->key] = 1;//방문플래그를 set한다.
+				}
 
-	enQueue(&head[v]);//시작정점을 인큐한다.
-	visit[v] = 1;//시작정점의 방문플래그를 set한다.
-	while (1) {
-		temp = deQueue();//디큐한다.
-		if (!temp)//큐가 비었다면 종료한다.
-			break;
-		printf("%5d", temp->key);//디큐한 정점의 번호를 출력한다.
-		for (temp = temp->link; temp; temp = temp->link) //디큐한 정점의 인접정점을 모두 검사한다.
-			if (!visit[temp->key]) {//인접정점이 방문되지 않은 정점이라면
-				enQueue(&head[temp->key]);//인큐하고
-				visit[temp->key] = 1;//방문플래그를 set한다.
-			}
-
+		}
 	}
 }
 Node* deQueue()//디큐
@@ -229,7 +228,6 @@ Node* deQueue()//디큐
 	else//아니라면 front 리턴
 		return queue[++front];
 }
-
 void enQueue(Node* aNode)//인큐
 {
 	if (rear + 1 >= MAX_VERTEX_NUM)//큐가 꽉찼다면
@@ -237,7 +235,6 @@ void enQueue(Node* aNode)//인큐
 	else//아니라면 rear에 저장
 		queue[++rear] = aNode;
 }
-
 void Quit() {//초기화 및 해제
 	Node* tmp = NULL;
 	Node* temp = NULL;
@@ -255,8 +252,8 @@ void Quit() {//초기화 및 해제
 	head = NULL;
 }
 
-int ready(int v){
-	if(head[v].key!=v){
+int ready(int v){//탐색을 시작할수있는지 판단한다.
+	if(head[v].key!=v){//존재하지 않는 정점을 선택했다면 실패(-1)을 리턴한다.
 		printf("존재하지 않는 번호의 정점입니다.\n");
 		return -1;
 	}
